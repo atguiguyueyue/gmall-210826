@@ -22,6 +22,8 @@ public class Controller {
 
         //1.获取日活总数
         Integer dauTotal = publisherService.getDauTotal(date);
+        //获取交易额总数
+        Double gmvTotal = publisherService.getGmvTotal(date);
 
         //2.创建存放新增日活的Map集合
         HashMap<String, Object> dauMap = new HashMap<>();
@@ -35,10 +37,17 @@ public class Controller {
         devMap.put("name", "新增设备");
         devMap.put("value", 233);
 
+        //4.创建存放新增交易额的Map集合
+        HashMap<String, Object> gmvMap = new HashMap<>();
+        gmvMap.put("id", "order_amount");
+        gmvMap.put("name", "新增交易额");
+        gmvMap.put("value", gmvTotal);
+
         //4.将Map集合封装到List集合中
         ArrayList<Map> result = new ArrayList<>();
         result.add(dauMap);
         result.add(devMap);
+        result.add(gmvMap);
 
         return JSONObject.toJSONString(result);
     }

@@ -6,7 +6,7 @@
     </select>
 
     <select id="selectDauTotalHourMap" resultMap="dauTotalHour">
-        select LOGHOUR lh, count(*) ct from gmall210826_dau where  LOGDATE=#{date}
+        select LOGHOUR lh, count(*) ct from gmall210826_dau where  LOGDATE=#{date}2
         group by LOGHOUR
     </select>
 
