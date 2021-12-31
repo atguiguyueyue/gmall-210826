@@ -43,4 +43,19 @@ public class PublisherServiceImpl implements PublisherService {
     public Double getGmvTotal(String date) {
         return orderMapper.selectOrderAmountTotal(date);
     }
+
+    @Override
+    public Map<String, Double> getGmvTotalHour(String date) {
+        //1.获取老的Map集合
+        List<Map> list = orderMapper.selectOrderAmountHourMap(date);
+
+        //2.创建新的Map集合
+        HashMap<String, Double> result = new HashMap<>();
+
+        //3.取出老Map中的数据放入新Map集合
+        for (Map map : list) {
+            result.put((String) map.get("CREATE_HOUR"), (Double) map.get("SUM_AMOUNT"));
+        }
+        return result;
+    }
 }

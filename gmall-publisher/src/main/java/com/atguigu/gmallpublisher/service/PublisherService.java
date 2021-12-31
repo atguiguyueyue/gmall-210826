@@ -11,4 +11,7 @@ public interface PublisherService {
 
     //返回交易额总数数据
     public Double getGmvTotal(String date);
+
+    //返回交易额分时数据
+    public Map<String, Double> getGmvTotalHour(String date);
 }

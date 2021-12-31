@@ -60,10 +60,21 @@ public class Controller {
         //1.根据今天的日期获取到昨天的日期
         String yesterday = LocalDate.parse(date).plusDays(-1).toString();
 
-        //2.根据日期获取Service处理后的数据
-        Map<String, Long> todayMap = publisherService.getDauTotalHour(date);
+        Map todayMap=null;
+        Map yesterdayMap=null;
 
-        Map<String, Long> yesterdayMap = publisherService.getDauTotalHour(yesterday);
+        if ("dau".equals(id)){
+            //2.根据日期获取Service处理后的数据
+            todayMap = publisherService.getDauTotalHour(date);
+
+           yesterdayMap = publisherService.getDauTotalHour(yesterday);
+        }else if ("order_amount".equals(id)){
+            //交易额相关的数据
+            todayMap = publisherService.getGmvTotalHour(date);
+
+            yesterdayMap = publisherService.getGmvTotalHour(yesterday);
+        }
+
 
         //3.创建存放最终结果的Map集合
         HashMap<String, Map> result = new HashMap<>();

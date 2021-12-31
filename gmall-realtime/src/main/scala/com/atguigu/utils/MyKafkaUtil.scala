@@ -1,6 +1,7 @@
 package com.atguigu.utils
 
 
+import java.io
 import java.util.Properties
 
 import org.apache.kafka.clients.consumer.ConsumerRecord
@@ -18,7 +19,7 @@ object MyKafkaUtil {
   val broker_list: String = properties.getProperty("kafka.broker.list")
 
   //3.kafka消费者配置
-  val kafkaParam = Map(
+  val kafkaParam= Map(
     "bootstrap.servers" -> broker_list,
     "key.deserializer" -> classOf[StringDeserializer],
     "value.deserializer" -> classOf[StringDeserializer],
