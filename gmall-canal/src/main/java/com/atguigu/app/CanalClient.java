@@ -18,7 +18,7 @@ public class CanalClient {
         //1.创建Canal连接对象
         CanalConnector canalConnector = CanalConnectors.newSingleConnector(new InetSocketAddress("hadoop102", 11111), "example", "", "");
 
-        while (true){
+        while (true) {
             //2.连接Canal
             canalConnector.connect();
 
@@ -31,14 +31,14 @@ public class CanalClient {
             //5.获取每一个sql执行的结果
             List<CanalEntry.Entry> entries = message.getEntries();
 
-            if (entries.size()<=0){
+            if (entries.size() <= 0) {
                 System.out.println("没有数据休息一会。。。。。");
                 try {
                     Thread.sleep(5000);
                 } catch (InterruptedException e) {
                     e.printStackTrace();
                 }
-            }else {
+            } else {
                 //6.遍历存放entry的list集合取出每一个entry
                 for (CanalEntry.Entry entry : entries) {
 
@@ -49,7 +49,7 @@ public class CanalClient {
                     CanalEntry.EntryType entryType = entry.getEntryType();
 
                     //9.根据类型判断，再获取序列化的数据
-                    if (CanalEntry.EntryType.ROWDATA.equals(entryType)){
+                    if (CanalEntry.EntryType.ROWDATA.equals(entryType)) {
                         ByteString storeValue = entry.getStoreValue();
 
                         //10.获取反序列化数据
@@ -71,24 +71,32 @@ public class CanalClient {
     }
 
     private static void handler(String tableName, CanalEntry.EventType eventType, List<CanalEntry.RowData> rowDatasList) {
-        if ("order_info".equals(tableName)&& CanalEntry.EventType.INSERT.equals(eventType)){
-            //获取订单表中，新增的数据
-            for (CanalEntry.RowData rowData : rowDatasList) {
-                //获取到当前行更新后的数据
-                List<CanalEntry.Column> afterColumnsList = rowData.getAfterColumnsList();
-                //创建JSONObject对象用来封装解析出来的数据
-                JSONObject jsonObject = new JSONObject();
-                //获取到一行中每一列的数据
-                for (CanalEntry.Column column : afterColumnsList) {
-                    //将一行数据封装到一个JSON中
-                    jsonObject.put(column.getName(), column.getValue());
-                }
-                //打印测试
-                System.out.println(jsonObject.toString());
+        if ("order_info".equals(tableName) && CanalEntry.EventType.INSERT.equals(eventType)) {
+            saveToKafka(rowDatasList, GmallConstants.KAFKA_TOPIC_ORDER);
+        } else if ("order_detail".equals(tableName) && CanalEntry.EventType.INSERT.equals(eventType)) {
+            saveToKafka(rowDatasList, GmallConstants.KAFKA_TOPIC_ORDER_DETAIL);
+        } else if ("user_info".equals(tableName) && (CanalEntry.EventType.INSERT.equals(eventType) || CanalEntry.EventType.UPDATE.equals(eventType))) {
+            saveToKafka(rowDatasList, GmallConstants.KAFKA_TOPIC_USER);
+        }
+    }
 
-                //将数据发送至Kafka中
-                MyKafkaSender.send(GmallConstants.KAFKA_TOPIC_ORDER, jsonObject.toString());
+    private static void saveToKafka(List<CanalEntry.RowData> rowDatasList, String kafkaTopicOrder) {
+        //获取订单表中，新增的数据
+        for (CanalEntry.RowData rowData : rowDatasList) {
+            //获取到当前行更新后的数据
+            List<CanalEntry.Column> afterColumnsList = rowData.getAfterColumnsList();
+            //创建JSONObject对象用来封装解析出来的数据
+            JSONObject jsonObject = new JSONObject();
+            //获取到一行中每一列的数据
+            for (CanalEntry.Column column : afterColumnsList) {
+                //将一行数据封装到一个JSON中
+                jsonObject.put(column.getName(), column.getValue());
             }
+            //打印测试
+            System.out.println(jsonObject.toString());
+
+            //将数据发送至Kafka中
+            MyKafkaSender.send(kafkaTopicOrder, jsonObject.toString());
         }
     }
 }
