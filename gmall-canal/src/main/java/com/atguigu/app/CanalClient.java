@@ -12,6 +12,7 @@ import com.google.protobuf.InvalidProtocolBufferException;
 
 import java.net.InetSocketAddress;
 import java.util.List;
+import java.util.Random;
 
 public class CanalClient {
     public static void main(String[] args) throws InvalidProtocolBufferException {
@@ -94,7 +95,11 @@ public class CanalClient {
             }
             //打印测试
             System.out.println(jsonObject.toString());
-
+            try {
+                Thread.sleep(new Random().nextInt(5000));
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
             //将数据发送至Kafka中
             MyKafkaSender.send(kafkaTopicOrder, jsonObject.toString());
         }
