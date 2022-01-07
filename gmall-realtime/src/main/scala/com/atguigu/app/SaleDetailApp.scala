@@ -3,15 +3,16 @@ package com.atguigu.app
 import java.util
 
 import com.alibaba.fastjson.JSON
-import com.atguigu.bean.{OrderDetail, OrderInfo, SaleDetail}
+import com.atguigu.bean.{OrderDetail, OrderInfo, SaleDetail, UserInfo}
 import com.atguigu.constants.GmallConstants
-import com.atguigu.utils.MyKafkaUtil
+import com.atguigu.utils.{MyEsUtil, MyKafkaUtil}
 import org.apache.kafka.clients.consumer.ConsumerRecord
 import org.apache.spark.SparkConf
 import org.apache.spark.streaming.dstream.{DStream, InputDStream}
 import org.apache.spark.streaming.{Seconds, StreamingContext}
 import org.json4s.native.Serialization
 import redis.clients.jedis.Jedis
+
 import collection.JavaConverters._
 
 object SaleDetailApp {
@@ -137,7 +138,36 @@ object SaleDetailApp {
       details.asScala.toIterator
     })
 
-    noUserSaleDetailDStream.print()
+    //7.反查缓存补全用户信息
+    val saleDetailDStream: DStream[SaleDetail] = noUserSaleDetailDStream.mapPartitions(partition => {
+      val jedis: Jedis = new Jedis("hadoop102", 6379)
+      val details: Iterator[SaleDetail] = partition.map(saleDetail => {
+        //查询redis中用户表的数据
+        val userInfoRedisKey: String = "UserInfo:" + saleDetail.user_id
+        val userInfoJSONStr: String = jedis.get(userInfoRedisKey)
+
+        //将查询出来的JSON数据转为样例类
+        val userInfo: UserInfo = JSON.parseObject(userInfoJSONStr, classOf[UserInfo])
+
+        //补全用户信息
+        saleDetail.mergeUserInfo(userInfo)
+
+        saleDetail
+      })
+      jedis.close()
+      details
+    })
+    saleDetailDStream.print()
+
+    //8.将数据保存至ES
+    saleDetailDStream.foreachRDD(rdd=>{
+      rdd.foreachPartition(partition=>{
+        val list: List[(String, SaleDetail)] = partition.toList.map(saleDetail => {
+          (saleDetail.order_detail_id, saleDetail)
+        })
+        MyEsUtil.insertBulk(GmallConstants.ES_SALE_DETAIL_INDEX+"0826",list)
+      })
+    })
 
     ssc.start()
     ssc.awaitTermination()

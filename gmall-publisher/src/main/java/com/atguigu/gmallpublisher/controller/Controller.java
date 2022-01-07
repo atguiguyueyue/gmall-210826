@@ -7,10 +7,12 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import java.io.IOException;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
+
 @RestController
 public class Controller {
 
@@ -55,20 +57,20 @@ public class Controller {
     @RequestMapping("realtime-hours")
     public String getDauTotalHour(
             @RequestParam("id") String id,
-            @RequestParam("date") String date){
+            @RequestParam("date") String date) {
 
         //1.根据今天的日期获取到昨天的日期
         String yesterday = LocalDate.parse(date).plusDays(-1).toString();
 
-        Map todayMap=null;
-        Map yesterdayMap=null;
+        Map todayMap = null;
+        Map yesterdayMap = null;
 
-        if ("dau".equals(id)){
+        if ("dau".equals(id)) {
             //2.根据日期获取Service处理后的数据
             todayMap = publisherService.getDauTotalHour(date);
 
-           yesterdayMap = publisherService.getDauTotalHour(yesterday);
-        }else if ("order_amount".equals(id)){
+            yesterdayMap = publisherService.getDauTotalHour(yesterday);
+        } else if ("order_amount".equals(id)) {
             //交易额相关的数据
             todayMap = publisherService.getGmvTotalHour(date);
 
@@ -83,5 +85,15 @@ public class Controller {
         result.put("today", todayMap);
 
         return JSONObject.toJSONString(result);
+    }
+
+    @RequestMapping("sale_detail")
+    public String getSaleDetail(
+            @RequestParam("date") String date,
+            @RequestParam("startpage") Integer startpage,
+            @RequestParam("size") Integer size,
+            @RequestParam("keyword") String keyword
+    ) throws IOException {
+        return JSONObject.toJSONString(publisherService.getSaleDetail(date, startpage, size, keyword));
     }
 }

@@ -95,11 +95,11 @@ public class CanalClient {
             }
             //打印测试
             System.out.println(jsonObject.toString());
-            try {
-                Thread.sleep(new Random().nextInt(5000));
-            } catch (InterruptedException e) {
-                e.printStackTrace();
-            }
+//            try {
+//                Thread.sleep(new Random().nextInt(5000));
+//            } catch (InterruptedException e) {
+//                e.printStackTrace();
+//            }
             //将数据发送至Kafka中
             MyKafkaSender.send(kafkaTopicOrder, jsonObject.toString());
         }
